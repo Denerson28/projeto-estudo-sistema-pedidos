@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yaml
+    depends_on:
+      - order_postgres
+      - customer_postgres
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  order_postgres:
+    image: postgres:15
+    container_name: order_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - order_pg_data:/var/lib/postgresql/data
+
+  customer_postgres:
+    image: postgres:15
+    container_name: customer_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: customers
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - customer_pg_data:/var/lib/postgresql/data
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_wal:/wal
+      - loki_chunks:/loki/chunks
+      - loki_index:/loki/index
+      - loki_cache:/loki/boltdb-cache
+    command: -config.file=/etc/loki/local-config.yaml
+
+
+
+  promtail:
+    image: grafana/promtail:2.7.0
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+
+volumes:
+  order_pg_data:
+  customer_pg_data:
+  grafana_data:
+  loki_wal:
+  loki_chunks:
+  loki_index:
+  loki_cache:
