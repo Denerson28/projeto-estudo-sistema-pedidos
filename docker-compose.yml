@@ -64,8 +64,9 @@ services:
     image: grafana/promtail:2.7.0
     container_name: promtail
     volumes:
-      - /var/log:/var/log
       - ./monitoring/promtail-config.yaml:/etc/promtail/config.yaml
+      - ./orderservice/logs:/var/log/orderservice
+      - ./customerservice/logs:/var/log/customerservice
     command: -config.file=/etc/promtail/config.yaml
 
 volumes:
